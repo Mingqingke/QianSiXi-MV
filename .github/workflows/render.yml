@@ -1,0 +1,66 @@
+name: Render MV
+
+# 手动触发：Actions → Render MV → Run workflow
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      # 中文字幕必须有 CJK 字体，否则渲染成豆腐块
+      - name: CJK fonts
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-cjk
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      # 先出几张检查帧：万一整片渲染失败，Artifacts 里仍有画面可看
+      - name: Stills
+        run: |
+          npx remotion still QiansiXi-MV out/still-01-prelude.png  --frame=300
+          npx remotion still QiansiXi-MV out/still-02-firstline.png --frame=760
+          npx remotion still QiansiXi-MV out/still-03-makeup.png   --frame=1500
+          npx remotion still QiansiXi-MV out/still-04-stage.png    --frame=3600
+          npx remotion still QiansiXi-MV out/still-05-aging.png    --frame=4350
+          npx remotion still QiansiXi-MV out/still-06-flame.png    --frame=6050
+          npx remotion still QiansiXi-MV out/still-07-bow.png      --frame=6650
+          npx remotion still QiansiXi-MV out/still-08-embers.png   --frame=6960
+
+      - name: Upload stills
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stills
+          path: out/still-*.png
+          if-no-files-found: warn
+          retention-days: 7
+
+      # 整片：不传 --concurrency，让 Remotion 按机器核数自己决定
+      - name: Render full MV
+        run: npx remotion render QiansiXi-MV out/QianSiXi-MV.mp4
+
+      - name: Probe output
+        run: ls -lh out/QianSiXi-MV.mp4
+
+      - name: Upload MP4
+        uses: actions/upload-artifact@v4
+        with:
+          name: QianSiXi-MV-mp4
+          path: out/QianSiXi-MV.mp4
+          if-no-files-found: error
+          retention-days: 7

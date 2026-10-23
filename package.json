@@ -1,0 +1,30 @@
+{
+  "name": "qiansixi-mv",
+  "version": "1.0.0",
+  "private": true,
+  "description": "《牵丝戏》Remotion 音乐视觉 MV —— 东方提线木偶戏",
+  "scripts": {
+    "studio": "remotion studio",
+    "typecheck": "tsc --noEmit",
+    "render": "remotion render QiansiXi-MV out/QianSiXi-MV.mp4 --concurrency=2",
+    "render:preview": "remotion render QiansiXi-MV out/preview-720p.mp4 --scale=0.6667 --concurrency=2",
+    "still": "remotion still QiansiXi-MV out/still.png",
+    "offline:build": "node offline/build.mjs",
+    "offline:stills": "node offline/main.cjs --frames 570,1500,2600,3500,4800,5400,6300,6560,6690 --out out/stills --engine sharp",
+    "offline:render": "node offline/main.cjs --from 0 --to 7170 --out out/frames --workers 6 --engine sharp",
+    "offline:encode": "node_modules/@ffmpeg-installer/linux-arm64/ffmpeg -y -framerate 30 -start_number 0 -i out/frames/f%05d.png -c:v libx264 -preset slow -crf 17 -pix_fmt yuv420p -movflags +faststart out/QianSiXi-MV.mp4"
+  },
+  "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@remotion/cli": "^4.0.0",
+    "@resvg/resvg-js": "^2.6.2",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "^4.0.0",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.12",
+    "typescript": "5.6.3"
+  }
+}
